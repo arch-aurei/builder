@@ -1,0 +1,11 @@
+name: "archlinux package builder"
+description: "I build packages"
+inputs:
+  action:
+    description: 'build or package'
+    required: true
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - "--${{ inputs.action }}"
