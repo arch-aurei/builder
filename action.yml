@@ -6,6 +6,6 @@ inputs:
     required: true
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: 'docker.pkg.github.com/arch-aurei/builder/aurei-builder:latest'
   args:
     - "--${{ inputs.action }}"
