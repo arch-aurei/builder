@@ -45,3 +45,4 @@ def resolve(package):
             raise NotImplemented("TODO: Repo package source")
             return repo_pkg
         raise NotImplemented("TODO: Local file package source")
+    return actions
