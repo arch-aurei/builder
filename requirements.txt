@@ -1,2 +1,5 @@
 loguru
 boto3
+pyalpm
+python-libarchive
+requests
