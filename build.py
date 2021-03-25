@@ -33,7 +33,6 @@ class Manifest:
     with open(self.filename, 'r') as manifest:
       reader = csv.DictReader(manifest, Manifest.HEADER)
       for row in reader:
-        logger.debug(f"Checking {row['package']} ~ {package}")
         if row['package'].lower() == package.lower():
           return row['sha']
       return None
