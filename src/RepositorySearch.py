@@ -14,12 +14,19 @@ _repos = [_alpm_handle.register_syncdb('core', pyalpm.SIG_DATABASE_OPTIONAL),
 def local_search(package: str):
     """ Search for a package in the systems default repos """
     for repo in _repos:
-        # p = repo.search(f"^{package}$")
         p = repo.get_pkg(package)
         if p is not None:
             return RepositoryItem(p.filename, p.name, p.base, p.version, p.desc, p.size, p.isize, p.md5sum,
                                   p.sha256sum, p.url, p.licenses, p.arch, p.builddate, p.packager, p.depends,
                                   p.optdepends, p.makedepends)
+        else:
+            # It could be a provides, if so lets take the first
+            s = repo.search(f"^{package}$")
+            if len(s) > 0:
+                p = s[0]
+                return RepositoryItem(p.filename, p.name, p.base, p.version, p.desc, p.size, p.isize, p.md5sum,
+                                      p.sha256sum, p.url, p.licenses, p.arch, p.builddate, p.packager, p.depends,
+                                      p.optdepends, p.makedepends)
     return None
 
 
