@@ -32,6 +32,7 @@ def aur_search(package: str):
         return None
     else:
         r = res['results'][0]
+        print(r)
         return RepositoryItem(None, r['Name'], r['PackageBase'], r['Version'], r['Description'], None, None,
                               None, None, r['URL'], r['License'], None, None, None, r.get('Depends', []),
                               r.get('OptDepends', []), r.get('MakeDepends', []))

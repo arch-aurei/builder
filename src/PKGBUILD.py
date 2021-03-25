@@ -3,6 +3,7 @@ import re
 
 from src.RepositoryItem import RepositoryItem
 
+
 # This is quite unsafe, but we're trusting the PKGBUILD anyway (we're about to run it)
 def parse(file: str):
     ret = subprocess.check_output(['/usr/bin/bash', '-c', f'source {file}; set -o posix; set'], env={})
