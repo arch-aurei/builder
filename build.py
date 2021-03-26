@@ -4,20 +4,20 @@ import csv
 import os
 import sys
 import shutil
-import io
 from tempfile import NamedTemporaryFile
-from subprocess import Popen, PIPE
 from pathlib import Path
 from typing import Optional
-from threading import Thread
-from io import StringIO
 import pathlib
 
+from jinja2 import Environment, PackageLoader, select_autoescape
 from loguru import logger
-import boto3
+from git import Repo
 
-from src import PKGBUILD, Resolver
-from src.Resolver import LocalInstall, AURInstall
+from arch import pkgbuild, resolver
+from arch.repository import Repository
+from arch.resolver import LocalInstall, AURInstall
+from util import system
+from util.s3repo import S3Repo
 
 MANIFEST_NAME = "manifest.csv"
 REPO_NAME = "aurei"
@@ -57,72 +57,22 @@ class Manifest:
         shutil.move(tempfile.name, self.filename)
 
 
-class System:
-    @staticmethod
-    def update_packages():
-        logger.info("Updating system packages")
-        System.execute(['sudo', 'pacman', '-Syu', '--noconfirm'])
-
-    @staticmethod
-    def update_keys():
-        logger.info("Updating system keyring")
-        with open('keys.txt', 'r') as keys:
-            for key in keys.read().split("\n"):
-                if key.strip() != "":
-                    keypart = key.split('#')[0].strip()
-                    System.execute(['gpg', '--recv-key', keypart])
-
-    @staticmethod
-    def tee(infile, *files):
-        def fanout(infile, *files):
-            with infile:
-                for line in iter(infile.readline, ""):
-                    for f in files:
-                        if isinstance(f, io.TextIOBase):
-                            f.write(str(line))
-                        elif callable(f):
-                            f(str(line).strip())
-                        else:
-                            f.write(bytes(line, 'utf-8'))
-                            f.flush()
-
-        t = Thread(target=fanout, args=(infile,) + files)
-        t.daemon = True
-        t.start()
-        return t
-
-    @staticmethod
-    def execute(command, cwd=None, env=None):
-        logger.debug(f"executing command: {command}")
-        p = Popen(command, stdout=PIPE, stderr=PIPE, cwd=cwd, env=env, text=True)
-        stout = StringIO()
-        sterr = StringIO()
-        threads = [System.tee(p.stdout, stout, logger.debug), System.tee(p.stderr, sterr, logger.error)]
-        for t in threads:
-            t.join()
-        ret = p.wait()
-        if ret != 0:
-            logger.error(f"failed to execute command: {command} exit code {ret}")
-            exit(100)
-        stout.seek(0)
-        return stout.read()
-
-
 def process_dependency(path, package):
     logger.debug("Checking package dependencies")
     makepkg_env = os.environ.copy()
     makepkg_env["PKGDEST"] = "../../artifacts"
-    actions = Resolver.resolve(package)
+    actions = resolver.resolve(package)
     for action in actions:
         if isinstance(action, LocalInstall):
-            logger.debug("Package will be installed from local repos")
+            continue
         elif isinstance(action, AURInstall):
             logger.debug(f"Installing aur package: {action.package.name}")
             pkg_root = os.path.join(path, '../')
-            System.execute(['git', 'clone', f'https://aur.archlinux.org/{action.package.name}.git'], cwd=pkg_root)
-            pkg = PKGBUILD.parse(os.path.join(pkg_root, action.package.name, 'PKGBUILD'))
+            Repo.clone_from(f'https://aur.archlinux.org/{action.package.name}.git',
+                            os.path.join(pkg_root, action.package.name))
+            pkg = pkgbuild.parse(os.path.join(pkg_root, action.package.name, 'PKGBUILD'))
             process_dependency(path, pkg)
-            System.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env,
+            system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env,
                            cwd=os.path.join(pkg_root, action.package.name))
 
 
@@ -134,9 +84,9 @@ def process(package: str, sha: str) -> None:
         logger.info(f"Building package {package}")
         makepkg_env = os.environ.copy()
         makepkg_env["PKGDEST"] = "../../artifacts"
-        pkg = PKGBUILD.parse(os.path.join(package, 'PKGBUILD'))
+        pkg = pkgbuild.parse(os.path.join(package, 'PKGBUILD'))
         process_dependency(package, pkg)
-        System.execute(['makepkg', '-s', '-C', '--noconfirm'], env=makepkg_env, cwd=package)
+        system.execute(['makepkg', '-s', '-C', '--noconfirm'], env=makepkg_env, cwd=package)
         m.update(package, sha)
         logger.info(f"Package {package} updated")
     else:
@@ -145,55 +95,52 @@ def process(package: str, sha: str) -> None:
 
 def build_main():
     logger.info("Building packages")
-    System.update_packages()
-    System.update_keys()
+    system.update_packages()
+    system.update_keys()
 
-    packages = System.execute(['git', 'submodule', 'status'])
-    for line in packages.split("\n"):
-        if line.strip() != "":
-            xs = line.strip().split(" ")
-            process(xs[1], xs[0])
-
-
-class Repo:
-    def __init__(self, repo_name):
-        self.repo_name = repo_name
-        self.s3 = boto3.client('s3')
-        self.repo_files = [f"{self.repo_name}.db.tar.zst", f"{self.repo_name}.files.tar.zst"]
-
-    def download(self):
-        logger.info("Downloading repository files")
-        for file in self.repo_files:
-            self.s3.download_file(BUCKET_NAME, file, f"artifacts/{file}")
-
-    def upload(self):
-        logger.info("Uploading repository files")
-        for file in self.repo_files:
-            if file.endswith('.tar.zst'):
-                self.s3.upload_file(f"artifacts/{file}", BUCKET_NAME, file.replace('.tar.zst', ''))
-            self.s3.upload_file(f"artifacts/{file}", BUCKET_NAME, file)
-
-    def add_package(self, package):
-        logger.info(f"Adding {package} to repository")
-        self.s3.upload_file(f"artifacts/{package}", BUCKET_NAME, package)
-        System.execute(["repo-add", f"{self.repo_name}.db.tar.zst", package], cwd="artifacts")
+    repo = Repo(os.getcwd())
+    for submodule in repo.iter_submodules():
+        process(submodule.path, submodule.hexsha)
 
 
 def package_main():
-    packages = list(map(lambda x: os.path.basename(x), pathlib.Path('artifacts').glob('*.pkg.tar.zst')))
+    packages = list(map(lambda x: os.path.basename(x), pathlib.Path('artifacts')
+                        .glob('*.pkg.tar.zst')))
     logger.info(f"Found {len(packages)} packages to add to repo")
     if len(packages) > 0:
-        repo = Repo(REPO_NAME)
+        system.import_key("aurei.pgp")
+        repo = S3Repo(REPO_NAME, BUCKET_NAME)
         repo.download()
         for package in packages:
             repo.add_package(package)
         repo.upload()
+        upload_index(repo)
+
+
+def upload_index(repo):
+    r = Repository(os.path.join("artifacts", f"{REPO_NAME}.db.tar.zst"))
+
+    env = Environment(
+        loader=PackageLoader('__main__', 'templates'),
+        autoescape=select_autoescape(['html'])
+    )
+    template = env.get_template('index.html')
+    with open(os.path.join('artifacts', 'index.html'), 'w') as writer:
+        writer.write(template.render(packages=r.entries))
+    repo.upload_file('index.html')
+
+
+def render_main():
+    repo = S3Repo(REPO_NAME, BUCKET_NAME)
+    repo.download()
+    upload_index(repo)
 
 
 if __name__ == "__main__":
     logger.remove(0)
     logger.add(sys.stderr,
-               format="<level>{level: <8}</level> | <cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+               format="<level>{level: <8}</level> | <cyan>{function}</cyan>:"
+                      "<cyan>{line}</cyan> - <level>{message}</level>",
                colorize=True)
     import argparse
 
@@ -202,11 +149,13 @@ if __name__ == "__main__":
                         action='store_true')
     parser.add_argument('--package', help='update repo with latest packages',
                         action='store_true')
+    parser.add_argument('--render', help='render and upload an index.html for the repo',
+                        action='store_true')
     args = parser.parse_args()
     if args.build and args.package:
         print("Cowardly refusing to do both build and package")
         exit(-1)
-    elif (not args.build) and (not args.package):
+    elif (not args.build) and (not args.package) and (not args.render):
         parser.print_help()
         exit(-1)
 
@@ -214,3 +163,5 @@ if __name__ == "__main__":
         build_main()
     elif args.package:
         package_main()
+    elif args.render:
+        render_main()

@@ -1,8 +1,8 @@
 from loguru import logger
 
-from src import RepositorySearch
-from src.Repository import Repository
-from src.RepositoryItem import RepositoryItem
+from arch import repository_search
+from arch.repository import Repository
+from arch.repository_item import RepositoryItem
 
 
 class Strategy:
@@ -28,21 +28,21 @@ def resolve(package):
     actions = []
     for pkg in package.depends:
         logger.info(f"Looking for dependency: {pkg}")
-        local = RepositorySearch.local_search(pkg)
+        local = repository_search.local_search(pkg)
         if local is not None:
-            logger.info(f"Found package dependency locally")
+            logger.info("Found package dependency locally")
             actions.append(LocalInstall(local))
             continue
-        remote = RepositorySearch.aur_search(pkg)
+        remote = repository_search.aur_search(pkg)
         if remote is not None:
-            logger.info(f"Found package on the AUR")
+            logger.info("Found package on the AUR")
             actions.append(AURInstall(remote))
             continue
         repo = Repository("aurei")
         repo_pkg = repo.search(package)
         if repo_pkg is not None:
-            logger.info(f"Found package in repo")
-            raise NotImplemented("TODO: Repo package source")
-            return repo_pkg
-        raise NotImplemented("TODO: Local file package source")
+            logger.info("Found package in repo")
+            raise NotImplementedError("TODO: Repo package source")
+            # return repo_pkg
+        raise NotImplementedError("TODO: Local file package source")
     return actions

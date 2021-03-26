@@ -1,0 +1,55 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Aurei</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+</head>
+
+<body>
+<div class="container">
+    <h1>aurei arch repo</h1>
+    <p>Aurei is an arch repository that automatically builds a bunch of packages from the AUR, you can find
+        <a href="https://github.com/arch-aurei">the code here</a></p>
+    <p>Add this code block to your pacman.conf before <code>[Core]</code></p>
+    <pre><code>[aurei]
+Server = https://aurei.nulls.ec</code></pre>
+
+    <h2>Packages</h2>
+    {% for name, package in packages.items() %}
+    <div class="container">
+        <h3><a href="{{ package.filename }}">{{ package.name }}</a></h3>
+        <p>{{ package.desc }}</p>
+        <div class="row">
+            <div class="column column-10"><b>URL:</b></div>
+            <div class="column"><a href="{{ package.url }}">{{ package.url }}</a></div>
+        </div>
+        <div class="row">
+            <div class="column column-10"><b>AUR:</b></div>
+            <div class="column"><a href="https://aur.archlinux.org/packages/{{ package.base }}">https://aur.archlinux.org/packages/{{ package.base }}</a></div>
+        </div>
+        <div class="row">
+            <div class="column column-10"><b>Version:</b></div>
+            <div class="column">{{ package.version }}</div>
+        </div>
+        <div class="row">
+            <div class="column column-10"><b>Built:</b></div>
+            <div class="column">{{ package.builddate }}</div>
+        </div>
+        <div class="row">
+            <div class="column column-10"><b>License:</b></div>
+            <div class="column">{{ package.license | join(", ") }}</div>
+        </div>
+        <div class="row">
+            <div class="column column-10"><b>SHA256:</b></div>
+            <div class="column">{{ package.sha256sum }}</div>
+        </div>
+        <hr />
+    </div>
+    {% endfor %}
+</div>
+</body>
+</html>

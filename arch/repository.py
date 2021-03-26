@@ -1,21 +1,33 @@
+from collections.abc import Iterable
+from datetime import datetime
+
 import libarchive
 
-from src.RepositoryItem import RepositoryItem
+from arch.repository_item import RepositoryItem
+
+
+def _flatten(l):
+    for el in l:
+        if isinstance(el, Iterable) and not isinstance(el, (str, bytes)):
+            yield from _flatten(el)
+        else:
+            yield el
 
 
 class Repository:
     """ Simple parser for the arch repository format """
+
     def __init__(self, name):
         self.name = name
         self.entries = {}
-        with libarchive.Archive(self.name, 'r') as a:
-            for entry in a:
+        with libarchive.Archive(self.name, 'r') as archive:
+            for entry in archive:
                 if entry.size != 0:
-                    package = self.parse_entry(str(a.read(entry.size), 'utf-8'))
+                    package = self.parse_entry(str(archive.read(entry.size), 'utf-8'))
                     self.entries[package.name] = package
 
     def search(self, package):
-        self.entries.get(package)
+        return self.entries.get(package)
 
     @staticmethod
     def parse_entry(param):
@@ -38,7 +50,9 @@ class Repository:
                     d[current].append(line)
                 else:
                     d[current] = line
-        return RepositoryItem(d['filename'], d['name'], d['base'], d['version'], d['desc'], d['csize'], d['isize'],
-                              d['md5sum'], d['sha256sum'], d['url'], d['license'], d['arch'], d['builddate'],
-                              d['packager'], d.get('depends', []), d.get('optdepends', []), d.get('makedepends', []))
-
+        builddate = datetime.utcfromtimestamp(int(d['builddate'])).strftime('%Y-%m-%dT%H:%M:%SZ')
+        return RepositoryItem(d['filename'], d['name'], d['base'], d['version'], d['desc'],
+                              d['csize'], d['isize'], d['md5sum'], d['sha256sum'], d['url'],
+                              _flatten([d['license']]), d['arch'], builddate, d['packager'],
+                              d.get('depends', []), d.get('optdepends', []),
+                              d.get('makedepends', []))
