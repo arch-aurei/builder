@@ -32,9 +32,11 @@ class S3Repo:
             self.upload_file(file)
 
     def upload_file(self, file):
+        args = {}
         content_type = mimetypes.guess_type(file)[0]
-        self.s3.upload_file(os.path.join(self.build_dir, file), self.bucket_name, file,
-                            ExtraArgs={'ContentType': content_type})
+        if content_type is not None:
+            args['ContentType'] = content_type
+        self.s3.upload_file(os.path.join(self.build_dir, file), self.bucket_name, file, ExtraArgs=args)
 
     def add_package(self, package):
         logger.info(f"Adding {package} to repository")
