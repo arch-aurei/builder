@@ -24,6 +24,7 @@ REPO_NAME = "aurei"
 BUCKET_NAME = "aurei.nulls.ec"
 KEY_NAME = "aurei.pgp"
 KEY_ID = "565ABC3363CDD9F1E333E5744AAFA429C6F28921"
+MAX_PER_BUILD = 5
 
 
 class Manifest:
@@ -79,7 +80,7 @@ def process_dependency(path, package):
                            cwd=os.path.join(pkg_root, action.package.name))
 
 
-def process(package: str, sha: str) -> None:
+def process(package: str, sha: str) -> bool:
     logger.info(f"Processing package: {package}")
     m = Manifest(MANIFEST_NAME)
     manifest = m.check(package)
@@ -93,8 +94,10 @@ def process(package: str, sha: str) -> None:
         system.execute(['makepkg', '-s', '-C', '--noconfirm'], env=makepkg_env, cwd=package)
         m.update(package, sha)
         logger.info(f"Package {package} updated")
+        return True
     else:
         logger.info(f"Package {package} up to date, not rebuilding")
+        return False
 
 
 def build_main():
@@ -104,8 +107,13 @@ def build_main():
     system.import_key(KEY_NAME, KEY_ID)
 
     repo = Repo(os.getcwd())
+    builds = 0
     for submodule in repo.iter_submodules():
-        process(submodule.path, submodule.hexsha)
+        if process(submodule.path, submodule.hexsha):
+            builds += 1
+        if builds >= MAX_PER_BUILD:
+            logger.info("Hit max builds per single run, please run again")
+            exit(0)
 
 
 def package_main():
