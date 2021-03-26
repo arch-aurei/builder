@@ -117,8 +117,9 @@ def build_main():
 
 
 def package_main():
-    packages = list(map(lambda x: os.path.basename(x), pathlib.Path('artifacts')
-                        .glob('*.pkg.tar.zst')))
+    packages = list(filter(lambda x: not x.endswith(".sig"),
+                           map(lambda x: os.path.basename(x),
+                               pathlib.Path('artifacts').glob('*.pkg.tar*'))))
     logger.info(f"Found {len(packages)} packages to add to repo")
     if len(packages) > 0:
         system.import_key(KEY_NAME, KEY_ID)
