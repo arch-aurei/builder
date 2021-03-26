@@ -25,8 +25,12 @@ sudo pacman-key --lsign 565ABC3363CDD9F1E333E5744AAFA429C6F28921</code></pre>
     <h2>Packages</h2>
     {% for name, package in packages.items() %}
     <div class="container">
-        <h3><a href="{{ package.filename }}">{{ package.name }}</a> [<a href="{{ package.filename }}.sig">sig</a>]</h3>
+        <h3><a href="{{ package.filename }}">{{ package.name }}</a></h3>
         <p>{{ package.desc }}</p>
+        <div class="row">
+            <div class="column column-10"><b>Signature:</b></div>
+            <div class="column"><a href="{{ package.filename }}.sig">{{ package.filename }}.sig</a></div>
+        </div>
         <div class="row">
             <div class="column column-10"><b>URL:</b></div>
             <div class="column"><a href="{{ package.url }}">{{ package.url }}</a></div>
