@@ -22,6 +22,8 @@ from util.s3repo import S3Repo
 MANIFEST_NAME = "manifest.csv"
 REPO_NAME = "aurei"
 BUCKET_NAME = "aurei.nulls.ec"
+KEY_NAME = "aurei.pgp"
+KEY_ID = "565ABC3363CDD9F1E333E5744AAFA429C6F28921"
 
 
 class Manifest:
@@ -97,7 +99,7 @@ def build_main():
     logger.info("Building packages")
     system.update_packages()
     system.update_keys()
-    system.import_key("aurei.pgp")
+    system.import_key(KEY_NAME, KEY_ID)
 
     repo = Repo(os.getcwd())
     for submodule in repo.iter_submodules():
@@ -109,7 +111,7 @@ def package_main():
                         .glob('*.pkg.tar.zst')))
     logger.info(f"Found {len(packages)} packages to add to repo")
     if len(packages) > 0:
-        system.import_key("aurei.pgp")
+        system.import_key(KEY_NAME, KEY_ID)
         repo = S3Repo(REPO_NAME, BUCKET_NAME)
         repo.download()
         for package in packages:

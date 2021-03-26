@@ -22,10 +22,12 @@ def update_keys():
                     execute(['gpg', '--recv-key', keypart])
 
 
-def import_key(name):
+def import_key(name, keyid):
     if os.path.isfile(name):
         logger.info("Importing signing key")
         execute(['gpg', '--import', name])
+        execute(['sudo', 'pacman-key', '--add', name])
+        execute(['sudo', 'pacman-key', '--lsign', keyid])
 
 
 def _tee(infile, *files):
