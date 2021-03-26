@@ -13,9 +13,10 @@ COPY templates /templates
 COPY build.py /entrypoint.py
 
 RUN pacman -Syu --noconfirm python python-pip pacman-contrib git wget && \
-    pacman --noconfirm -Sc && \
-    pip install --no-cache-dir -r requirements.txt
+    pacman --noconfirm -Sc
 
 USER builder
+
+RUN pip install --no-cache-dir -r requirements.txt
 
 ENTRYPOINT ["/entrypoint.py"]
