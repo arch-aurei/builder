@@ -97,6 +97,7 @@ def build_main():
     logger.info("Building packages")
     system.update_packages()
     system.update_keys()
+    system.import_key("aurei.pgp")
 
     repo = Repo(os.getcwd())
     for submodule in repo.iter_submodules():
