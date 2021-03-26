@@ -17,11 +17,15 @@
     <p>Add this code block to your pacman.conf before <code>[Core]</code></p>
     <pre><code>[aurei]
 Server = https://aurei.nulls.ec</code></pre>
+    <p>And make sure you import the GPG key <a href="/aurei.asc">located here</a></p>
+    <pre><code>curl https://aurei.nulls.ec/aurei.asc > aurei.asc
+sudo pacman-key --add aurei.asc
+sudo pacman-key --lsign 565ABC3363CDD9F1E333E5744AAFA429C6F28921</code></pre>
 
     <h2>Packages</h2>
     {% for name, package in packages.items() %}
     <div class="container">
-        <h3><a href="{{ package.filename }}">{{ package.name }}</a></h3>
+        <h3><a href="{{ package.filename }}">{{ package.name }}</a> [<a href="{{ package.filename }}.sig">sig</a>]</h3>
         <p>{{ package.desc }}</p>
         <div class="row">
             <div class="column column-10"><b>URL:</b></div>
