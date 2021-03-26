@@ -22,11 +22,11 @@ def update_keys():
                     execute(['gpg', '--recv-key', keypart])
 
 
-def import_key(name, keyid):
+def import_key(name: str, keyid: str):
     if os.path.isfile(name):
         logger.info("Importing signing key")
         execute(['gpg', '--import', name])
-        execute(['sudo', 'pacman-key', '--add', name])
+        execute(['sudo', 'pacman-key', '--add', name.replace('pgp', 'asc')])
         execute(['sudo', 'pacman-key', '--lsign', keyid])
 
 
