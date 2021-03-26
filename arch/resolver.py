@@ -1,3 +1,5 @@
+import re
+
 from loguru import logger
 
 from arch import repository_search
@@ -27,6 +29,9 @@ class LocalInstall(Strategy):
 def resolve(package):
     actions = []
     for pkg in package.depends:
+        stripped_version = re.search(r"^([^<>=]+)", pkg) # TODO: we should really check versions
+        pkg = stripped_version.group(1)
+
         logger.info(f"Looking for dependency: {pkg}")
         local = repository_search.local_search(pkg)
         if local is not None:
