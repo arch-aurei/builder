@@ -15,8 +15,13 @@ COPY build.py /entrypoint.py
 RUN pacman -Syu --noconfirm python python-pip pacman-contrib git wget && \
     pacman --noconfirm -Sc
 
+ENV VIRTUAL_ENV=/opt/venv
+RUN python -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN chown -R builder:builder $VIRTUAL_ENV
+
 USER builder
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-ENTRYPOINT ["/entrypoint.py"]
+ENTRYPOINT ["python", "/entrypoint.py"]
