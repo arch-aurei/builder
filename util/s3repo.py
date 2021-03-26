@@ -41,5 +41,8 @@ class S3Repo:
     def add_package(self, package):
         logger.info(f"Adding {package} to repository")
         self.upload_file(package)
+        if os.path.isfile(f"{package}.sig"):
+            logger.debug(f"Uploading signature")
+            self.upload_file(f"{package}.sig")
         system.execute(["repo-add", str.join('.', [self.repo_name, 'db', self.compression]), package],
                        cwd=self.build_dir)
