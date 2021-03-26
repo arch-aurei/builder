@@ -26,6 +26,8 @@ def import_key(name: str, keyid: str):
     if os.path.isfile(name):
         logger.info("Importing signing key")
         execute(['gpg', '--import', name])
+        execute(['sudo', 'pacman-key', '--init'])
+        execute(['sudo', 'pacman-key', '--populate'])
         execute(['sudo', 'pacman-key', '--add', name.replace('pgp', 'asc')])
         execute(['sudo', 'pacman-key', '--lsign', keyid])
 
