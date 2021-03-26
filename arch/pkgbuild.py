@@ -16,7 +16,7 @@ def parse(file: str):
             v = kv[1]
             if k.lower() == k and not k.startswith('_'):
                 d[k] = _parse_value(v)
-    return RepositoryItem(None, d['pkgname'], None, d['pkgver'], d['pkgdesc'], None, None,
+    return RepositoryItem(None, d['pkgname'], None, d['pkgver'], d.get('pkgdesc', None), None, None,
                           None, None, d['url'], d['license'], d['arch'], None, None,
                           d.get('depends', []), d.get('optdepends', []), d.get('makedepends', []))
 
