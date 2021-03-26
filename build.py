@@ -63,6 +63,7 @@ def process_dependency(path, package):
     logger.debug("Checking package dependencies")
     makepkg_env = os.environ.copy()
     makepkg_env["PKGDEST"] = "../../artifacts"
+    makepkg_env["PATH"] = "/usr/local/bin:/usr/local/sbin:/usr/bin"
     actions = resolver.resolve(package)
     for action in actions:
         if isinstance(action, LocalInstall):
@@ -86,6 +87,7 @@ def process(package: str, sha: str) -> None:
         logger.info(f"Building package {package}")
         makepkg_env = os.environ.copy()
         makepkg_env["PKGDEST"] = "../../artifacts"
+        makepkg_env["PATH"] = "/usr/local/bin:/usr/local/sbin:/usr/bin"
         pkg = pkgbuild.parse(os.path.join(package, 'PKGBUILD'))
         process_dependency(package, pkg)
         system.execute(['makepkg', '-s', '-C', '--noconfirm'], env=makepkg_env, cwd=package)
