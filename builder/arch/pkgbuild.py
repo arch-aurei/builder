@@ -28,7 +28,8 @@ class PkgBuildPackage(BaseModel):
 
 
 def parse(file: str) -> list[PkgBuildPackage]:
-    ret = subprocess.check_output(['makepkg', '--printsrcinfo', '-p', file], cwd=os.path.dirname(file))
+    ret = subprocess.check_output(['makepkg', '--printsrcinfo', '-p', os.path.basename(file)],
+                                  cwd=os.path.dirname(file))
     pkgbase: dict[str, dict[str, Union[str, list[str]]]] = {}
     pkgname: dict[str, dict[str, Union[str, list[str]]]] = {}
 
