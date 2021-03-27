@@ -7,11 +7,14 @@ from arch.repository_item import RepositoryItem
 
 
 def _flatten(l):
-    for el in l:
-        if isinstance(el, Iterable) and not isinstance(el, (str, bytes)):
-            yield from _flatten(el)
-        else:
-            yield el
+    def flatten(xs):
+        for el in xs:
+            if isinstance(el, Iterable) and not isinstance(el, (str, bytes)):
+                yield from flatten(el)
+            else:
+                yield el
+
+    return list(flatten(l))
 
 
 class Repository:
@@ -50,9 +53,8 @@ class Repository:
                     d[current].append(line)
                 else:
                     d[current] = line
-        builddate = datetime.utcfromtimestamp(int(d['builddate'])).strftime('%Y-%m-%dT%H:%M:%SZ')
         return RepositoryItem(d['filename'], d['name'], d['base'], d['version'], d['desc'],
-                              d['csize'], d['isize'], d['md5sum'], d['sha256sum'], d['url'],
-                              _flatten([d['license']]), d['arch'], builddate, d['packager'],
-                              d.get('depends', []), d.get('optdepends', []),
-                              d.get('makedepends', []))
+                              int(d['csize']), int(d['isize']), d['md5sum'], d['sha256sum'], d['url'],
+                              _flatten([d['license']]), d['arch'], int(d['builddate']), d['packager'],
+                              _flatten([d.get('depends', [])]), _flatten([d.get('optdepends', [])]),
+                              _flatten([d.get('makedepends', [])]))
