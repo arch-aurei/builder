@@ -3,16 +3,17 @@ import os
 from subprocess import Popen, PIPE
 from threading import Thread
 from io import StringIO
+from typing import Optional, Mapping
 
 from loguru import logger
 
 
-def update_packages():
+def update_packages() -> None:
     logger.info("Updating system packages")
     execute(['sudo', 'pacman', '-Syu', '--noconfirm'])
 
 
-def update_keys():
+def update_keys() -> None:
     if os.path.isfile('keys.txt'):
         logger.info("Updating system keyring")
         with open('keys.txt', 'r') as keys:
@@ -22,7 +23,7 @@ def update_keys():
                     execute(['gpg', '--recv-key', keypart])
 
 
-def import_key(name: str, keyid: str):
+def import_key(name: str, keyid: str) -> None:
     if os.path.isfile(name):
         logger.info("Importing signing key")
         execute(['gpg', '--import', name])
@@ -51,7 +52,7 @@ def _tee(infile, *files):
     return t
 
 
-def execute(command, cwd=None, env=None):
+def execute(command: list[str], cwd: Optional[str] = None, env: Mapping[str, str] = None) -> str:
     logger.debug(f"executing command: {command}")
     p = Popen(command, stdout=PIPE, stderr=PIPE, cwd=cwd, env=env, text=True)
     stout = StringIO()

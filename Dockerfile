@@ -7,8 +7,7 @@ COPY makepkg.conf /etc/makepkg.conf
 COPY pacman.conf /etc/pacman.conf
 
 COPY requirements.txt /requirements.txt
-COPY arch /arch
-COPY util /util
+COPY builder /builder
 COPY templates /templates
 COPY build.py /entrypoint.py
 

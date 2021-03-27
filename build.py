@@ -15,11 +15,12 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 from loguru import logger
 from git import Repo
 
-from arch import pkgbuild, resolver
-from arch.repository import Repository
-from arch.resolver import LocalInstall, AURInstall
-from util import system
-from util.s3repo import S3Repo
+from builder.arch import resolver, pkgbuild
+from builder.arch.repository import Repository
+from builder.arch.repository_search import LocalPackage, AURPackage
+from builder.arch.resolver import Package
+from builder.util import system
+from builder.util.s3repo import S3Repo
 
 MANIFEST_NAME = "manifest.csv"
 REPO_NAME = "aurei"
@@ -62,24 +63,28 @@ class Manifest:
         shutil.move(tempfile.name, self.filename)
 
 
-def process_dependency(path, package):
+def makepkg_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["PKGDEST"] = "../../artifacts"
+    env["PATH"] = "/usr/local/bin:/usr/local/sbin:/usr/bin"
+    return env
+
+
+def process_dependency(path: str, package: Package) -> None:
     logger.debug("Checking package dependencies")
-    makepkg_env = os.environ.copy()
-    makepkg_env["PKGDEST"] = "../../artifacts"
-    makepkg_env["PATH"] = "/usr/local/bin:/usr/local/sbin:/usr/bin"
-    actions = resolver.resolve(package)
-    for action in actions:
-        if isinstance(action, LocalInstall):
+    dependencies = resolver.resolve(package.depends)
+    for dependency in dependencies:
+        if isinstance(dependency, LocalPackage):
             continue
-        elif isinstance(action, AURInstall):
-            logger.debug(f"Installing aur package: {action.package.name}")
+        elif isinstance(dependency, AURPackage):
+            logger.debug(f"Installing aur package: {dependency.name}")
             pkg_root = os.path.join(path, '../')
-            Repo.clone_from(f'https://aur.archlinux.org/{action.package.name}.git',
-                            os.path.join(pkg_root, action.package.name))
-            pkg = pkgbuild.parse(os.path.join(pkg_root, action.package.name, 'PKGBUILD'))
+            Repo.clone_from(f'https://aur.archlinux.org/{dependency.name}.git',
+                            os.path.join(pkg_root, dependency.name))
+            pkg = pkgbuild.parse(os.path.join(pkg_root, dependency.name, 'PKGBUILD'))
             process_dependency(path, pkg)
-            system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env,
-                           cwd=os.path.join(pkg_root, action.package.name))
+            system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env(),
+                           cwd=os.path.join(pkg_root, dependency.name))
 
 
 def process(package: str, sha: str) -> bool:
@@ -88,12 +93,10 @@ def process(package: str, sha: str) -> bool:
     manifest = m.check(package)
     if manifest is None or manifest != sha:
         logger.info(f"Building package {package}")
-        makepkg_env = os.environ.copy()
-        makepkg_env["PKGDEST"] = "../../artifacts"
-        makepkg_env["PATH"] = "/usr/local/bin:/usr/local/sbin:/usr/bin"
-        pkg = pkgbuild.parse(os.path.join(package, 'PKGBUILD'))
-        process_dependency(package, pkg)
-        system.execute(['makepkg', '-s', '-C', '--noconfirm'], env=makepkg_env, cwd=package)
+        pkgs = pkgbuild.parse(os.path.join(package, 'PKGBUILD'))
+        for pkg in pkgs:
+            process_dependency(package, pkg)
+        system.execute(['makepkg', '-s', '-C', '--noconfirm'], env=makepkg_env(), cwd=package)
         m.update(package, sha)
         logger.info(f"Package {package} updated")
         return True
@@ -102,7 +105,7 @@ def process(package: str, sha: str) -> bool:
         return False
 
 
-def build_main():
+def build_main() -> None:
     logger.info("Building packages")
     system.update_packages()
     system.update_keys()
@@ -118,7 +121,7 @@ def build_main():
             exit(0)
 
 
-def package_main():
+def package_main() -> None:
     packages = list(filter(lambda x: not x.endswith(".sig"),
                            map(lambda x: os.path.basename(x),
                                pathlib.Path('artifacts').glob('*.pkg.tar*'))))
@@ -133,7 +136,7 @@ def package_main():
         upload_index(repo)
 
 
-def upload_index(repo):
+def upload_index(repo: S3Repo) -> None:
     r = Repository(os.path.join("artifacts", f"{REPO_NAME}.db.tar.zst"))
 
     env = Environment(
