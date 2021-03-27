@@ -17,7 +17,7 @@ class RepositoryItem:
     url: str
     license: list[str]
     arch: Optional[str]
-    builddate: Optional[str]
+    builddate: Optional[int]
     packager: Optional[str]
     depends: list[str]
     optdepends: list[str]

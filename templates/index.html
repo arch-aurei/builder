@@ -87,10 +87,13 @@
         const locale = navigator.language;
 
         packageDates.forEach((pDate) => {
+          let localDate = new Date(0);
+          localDate.setUTCSeconds(pDate.getAttribute("datetime"));
+
           const formattedDate = new Intl.DateTimeFormat(locale, {
             dateStyle: "medium",
             timeStyle: "short",
-          }).format(new Date(pDate.getAttribute("datetime")));
+          }).format(localDate);
           pDate.textContent = formattedDate;
         });
       };
