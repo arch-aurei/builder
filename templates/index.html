@@ -57,7 +57,7 @@
         color: var(--bs-primary);
       }
     </style>
-    <script type="text/javascript" defer>
+    <script type="text/javascript">
       const debounce = (callback, wait) => {
         let timeoutId = null;
         return (...args) => {
@@ -75,9 +75,9 @@
         packages.forEach((package) => {
           const packageName = package.getAttribute("data-package-name");
           if (packageName.includes(searchString) || searchString.length === 0) {
-            package.classList.remove("d-none");
+            package.parentElement.classList.remove("d-none");
           } else {
-            package.classList.add("d-none");
+            package.parentElement.classList.add("d-none");
           }
         });
       };
@@ -95,12 +95,12 @@
         });
       };
 
-      (() => {
+      document.addEventListener("DOMContentLoaded", function(){
         document
           .querySelector("input#search")
           .addEventListener("input", debounce(search, 250));
         formatDates();
-      })();
+      });
     </script>
   </head>
 
@@ -141,7 +141,7 @@ Server = https://aurei.nulls.ec</code></pre>
         {% for name, package in packages.items() %}
         <div class="col-12 col-lg-6">
           <div
-            class="card"
+            class="card mb-4"
             id="{{ package.name }}"
             data-package-name="{{ package.name }}"
           >
