@@ -81,8 +81,9 @@ def process_dependency(path: str, package: Package) -> None:
             pkg_root = os.path.join(path, '../')
             Repo.clone_from(f'https://aur.archlinux.org/{dependency.name}.git',
                             os.path.join(pkg_root, dependency.name))
-            pkg = pkgbuild.parse(os.path.join(pkg_root, dependency.name, 'PKGBUILD'))
-            process_dependency(path, pkg)
+            pkgs = pkgbuild.parse(os.path.join(pkg_root, dependency.name, 'PKGBUILD'))
+            for pkg in pkgs:
+                process_dependency(path, pkg)
             system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env(),
                            cwd=os.path.join(pkg_root, dependency.name))
 
