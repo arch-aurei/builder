@@ -1,63 +1,206 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aurei</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
-</head>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500&family=Ubuntu:wght@300&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.0-beta3/css/bootstrap.min.css"
+      integrity="sha512-N415hCJJdJx+1UBfULt+i+ihvOn42V/kOjOpp1UTh4CZ70Hx5bDlKryWaqEKfY/8EYOu/C2MuyaluJryK1Lb5Q=="
+      crossorigin="anonymous"
+    />
+    <style type="text/css">
+      :root {
+        --bs-primary: #fc766aff;
+        --bs-dark: #606c76;
+      }
+      body {
+        color: var(--bs-dark);
+        font-weight: 100;
+      }
+      a {
+        color: var(--bs-primary);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      a:hover {
+        color: var(--bs-primary);
+      }
+      strong {
+        font-weight: 500;
+      }
+      pre > code {
+        background: rgb(255, 197, 192);
+        color: var(--bs-dark) !important;
+        display: inline-block;
+      }
+      code {
+        background: rgb(255, 197, 192);
+        color: var(--bs-dark) !important;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      h5 {
+        font-family: "Ubuntu", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+          sans-serif;
+        color: var(--bs-primary);
+      }
+    </style>
+    <script type="text/javascript" defer>
+      const debounce = (callback, wait) => {
+        let timeoutId = null;
+        return (...args) => {
+          window.clearTimeout(timeoutId);
+          timeoutId = window.setTimeout(() => {
+            callback.apply(null, args);
+          }, wait);
+        };
+      };
 
-<body>
-<div class="container">
-    <h1>aurei arch repo</h1>
-    <p>Aurei is an arch repository that automatically builds a bunch of packages from the AUR, you can find
-        <a href="https://github.com/arch-aurei">the code here</a></p>
-    <p>Add this code block to your pacman.conf before <code>[Core]</code></p>
-    <pre><code>[aurei]
+      const search = (e) => {
+        const searchString = e.target.value;
+        const packages = document.querySelectorAll("[data-package-name]");
+
+        packages.forEach((package) => {
+          const packageName = package.getAttribute("data-package-name");
+          if (packageName.includes(searchString) || searchString.length === 0) {
+            package.classList.remove("d-none");
+          } else {
+            package.classList.add("d-none");
+          }
+        });
+      };
+
+      const formatDates = () => {
+        const packageDates = document.querySelectorAll("time");
+        const locale = navigator.language;
+
+        packageDates.forEach((pDate) => {
+          const formattedDate = new Intl.DateTimeFormat(locale, {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }).format(new Date(pDate.getAttribute("datetime")));
+          pDate.textContent(formattedDate);
+        });
+      };
+
+      (() => {
+        document
+          .querySelector("input#search")
+          .addEventListener("input", debounce(search, 250));
+        formatDates();
+      })();
+    </script>
+  </head>
+
+  <body>
+    <main class="container">
+      <h1 class="text-center py-4 display-1">
+        Aurei
+        <small class="text-muted d-block fs-4">Community Arch Repo</small>
+      </h1>
+      <p class="lead">
+        Aurei is an arch repository that automatically builds a bunch of
+        packages from the AUR.
+      </p>
+      <h2 class="py-4">Getting started</h2>
+      <p>
+        Add this code block to your pacman.conf before
+        <code class="p-1">[Core]</code>
+      </p>
+      <pre><code class="p-1">[aurei]
 Server = https://aurei.nulls.ec</code></pre>
-    <p>And make sure you import the GPG key <a href="/aurei.asc">located here</a></p>
-    <pre><code>curl https://aurei.nulls.ec/aurei.asc > aurei.asc
-sudo pacman-key --add aurei.asc
-sudo pacman-key --lsign 565ABC3363CDD9F1E333E5744AAFA429C6F28921</code></pre>
+      <p>
+        And make sure you import the
+        <a href="/aurei.asc">GPG key</a>
+      </p>
+      <pre><code class="p-1">curl https://aurei.nulls.ec/aurei.asc | sudo pacman-key -a - && sudo pacman-key --lsign 565ABC3363CDD9F1E333E5744AAFA429C6F28921</code></pre>
 
-    <h2>Packages</h2>
-    {% for name, package in packages.items() %}
-    <div class="container">
-        <h3><a href="{{ package.filename }}">{{ package.name }}</a></h3>
-        <p>{{ package.desc }}</p>
-        <div class="row">
-            <div class="column column-10"><b>Signature:</b></div>
-            <div class="column"><a href="{{ package.filename }}.sig">{{ package.filename }}.sig</a></div>
+      <h2 class="py-4">Packages</h2>
+      <input
+        type="search"
+        placeholder="Search packages..."
+        id="search"
+        name="search"
+        autocomplete="off"
+        autocapitalize="off"
+        class="form-control form-control-lg mb-4"
+      />
+      <div class="row">
+        {% for name, package in packages.items() %}
+        <div class="col-12 col-lg-6">
+          <div
+            class="card"
+            id="{{ package.name }}"
+            data-package-name="{{ package.name }}"
+          >
+            <div class="card-body">
+              <div class="card-title">
+                <h3>
+                  <a href="{{ package.filename }}"> {{ package.name }} </a>
+                  <small class="text-muted"> {{ package.version }} </small>
+                </h3>
+              </div>
+              <p class="card-text">{{ package.desc }}</p>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item">
+                <strong>Signature:</strong>
+                <a href="{{ package.filename }}.sig"
+                  >{{ package.filename }}.sig</a
+                >
+              </li>
+              <li class="list-group-item">
+                <strong>URL:</strong>
+                <a href="{{ package.url }}">{{ package.url }}</a>
+              </li>
+              <li class="list-group-item">
+                <strong>AUR:</strong>
+                <a href="https://aur.archlinux.org/packages/{{ package.base }}">
+                  https://aur.archlinux.org/packages/{{ package.base }}
+                </a>
+              </li>
+              <li class="list-group-item">
+                <strong>Version:</strong>
+                {{ package.version }}
+              </li>
+              <li class="list-group-item">
+                <strong>Built:</strong>
+                <time
+                  datetime="{{ package.builddate }}"
+                  title="{{ package.builddate }}"
+                  >{{ package.builddate }}</time
+                >
+              </li>
+              <li class="list-group-item">
+                <strong>License:</strong>{{ package.license | join(", ") }}
+              </li>
+              <li class="list-group-item">
+                <strong>SHA256:</strong>
+                {{ package.sha256sum }}
+              </li>
+            </ul>
+          </div>
         </div>
-        <div class="row">
-            <div class="column column-10"><b>URL:</b></div>
-            <div class="column"><a href="{{ package.url }}">{{ package.url }}</a></div>
-        </div>
-        <div class="row">
-            <div class="column column-10"><b>AUR:</b></div>
-            <div class="column"><a href="https://aur.archlinux.org/packages/{{ package.base }}">https://aur.archlinux.org/packages/{{ package.base }}</a></div>
-        </div>
-        <div class="row">
-            <div class="column column-10"><b>Version:</b></div>
-            <div class="column">{{ package.version }}</div>
-        </div>
-        <div class="row">
-            <div class="column column-10"><b>Built:</b></div>
-            <div class="column">{{ package.builddate }}</div>
-        </div>
-        <div class="row">
-            <div class="column column-10"><b>License:</b></div>
-            <div class="column">{{ package.license | join(", ") }}</div>
-        </div>
-        <div class="row">
-            <div class="column column-10"><b>SHA256:</b></div>
-            <div class="column">{{ package.sha256sum }}</div>
-        </div>
-        <hr />
-    </div>
-    {% endfor %}
-</div>
-</body>
+        {% endfor %}
+      </div>
+    </main>
+    <footer>
+      <div class="container text-center">
+        <a href="https://github.com/arch-aurei">Github</a>
+        <a href="https://cdpn.io/aurei.asc">Key</a>
+      </div>
+    </footer>
+  </body>
 </html>
