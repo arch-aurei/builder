@@ -91,7 +91,7 @@
             dateStyle: "medium",
             timeStyle: "short",
           }).format(new Date(pDate.getAttribute("datetime")));
-          pDate.textContent(formattedDate);
+          pDate.textContent = formattedDate;
         });
       };
 
