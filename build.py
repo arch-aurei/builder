@@ -1,6 +1,7 @@
 #!/usr/bin/env -S python -u
 
 import csv
+import json
 import os
 import sys
 import shutil
@@ -142,6 +143,10 @@ def upload_index(repo):
     with open(os.path.join('artifacts', 'index.html'), 'w') as writer:
         writer.write(template.render(packages=r.entries))
     repo.upload_file('index.html')
+
+    with open(os.path.join('artifacts', 'repoPackages.json'), 'w') as writer:
+        writer.write(json.dumps(r.entries))
+    repo.upload_file('repoPackages.json')
 
 
 def render_main():
