@@ -146,7 +146,7 @@ def upload_index(repo):
     repo.upload_file('index.html')
 
     with open(os.path.join('artifacts', 'repoPackages.json'), 'w') as writer:
-        writer.write(json.dumps(map(lambda x: dataclasses.asdict(x), r.entries)))
+        writer.write(json.dumps(list(map(lambda x: dataclasses.asdict(x), r.entries))))
     repo.upload_file('repoPackages.json')
 
 
