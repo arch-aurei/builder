@@ -28,9 +28,9 @@ class PkgBuildPackage(BaseModel):
     sha512sums: list[str]
 
 
-def parse(file: str) -> list[PkgBuildPackage]:
-    logger.debug(f"Reading PKGBUILD file for ${file}")
-    ret = subprocess.check_output(['makepkg', '--printsrcinfo'], cwd=os.path.dirname(file))
+def parse(package_dir: str) -> list[PkgBuildPackage]:
+    logger.debug(f"Reading PKGBUILD file for {package_dir}")
+    ret = subprocess.check_output(['makepkg', '--printsrcinfo'], cwd=package_dir)
     pkgbase: dict[str, dict[str, Union[str, list[str]]]] = {}
     pkgname: dict[str, dict[str, Union[str, list[str]]]] = {}
 

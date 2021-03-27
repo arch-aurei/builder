@@ -18,10 +18,20 @@ Package = Union[LocalPackage, AURPackage, RepoPackage, PkgBuildPackage]
 # - on the aur
 # - in our local repo
 # - part of a pkgbuild itself
-def resolve(packages: list[str]) -> list[Package]:
+def resolve(packages: list[str], env_packages: list[PkgBuildPackage] = None) -> list[Package]:
     dependencies: list[Package] = []
     for pkg in packages:
         logger.info(f"Looking for dependency: {pkg}")
+        if env_packages is not None:
+            found = None
+            for epkg in env_packages:
+                if epkg.pkgname == pkg:
+                    logger.info("Found package dependency in environment")
+                    found = epkg
+                    continue
+            if found is not None:
+                dependencies.append(found)
+                continue
         local = repository_search.local_search(pkg)
         if local is not None:
             logger.info("Found package dependency locally")
@@ -29,7 +39,7 @@ def resolve(packages: list[str]) -> list[Package]:
             continue
         remote = repository_search.aur_search(pkg)
         if remote is not None:
-            logger.info("Found package on the AUR")
+            logger.info("Found package dependency on the AUR")
             dependencies.append(remote)
             continue
         repo = Repository("aurei")

@@ -15,6 +15,7 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 from loguru import logger
 
 from builder.arch import resolver, pkgbuild
+from builder.arch.pkgbuild import PkgBuildPackage
 from builder.arch.repository import Repository
 from builder.arch.repository_search import LocalPackage, AURPackage
 from builder.arch.resolver import Package
@@ -69,9 +70,9 @@ def makepkg_env() -> dict[str, str]:
     return env
 
 
-def process_dependency(path: str, package: Package) -> None:
+def process_dependency(path: str, package: Package, env_packages: list[PkgBuildPackage]) -> None:
     logger.debug("Checking package dependencies")
-    dependencies = resolver.resolve(list(map(lambda x: x["name"], package.depends)))
+    dependencies = resolver.resolve(list(map(lambda x: x["name"], package.depends)), env_packages)
     for dependency in dependencies:
         if isinstance(dependency, LocalPackage):
             continue
@@ -82,7 +83,7 @@ def process_dependency(path: str, package: Package) -> None:
                             os.path.join(pkg_root, dependency.name))
             pkgs = pkgbuild.parse(os.path.join(pkg_root, dependency.name))
             for pkg in pkgs:
-                process_dependency(path, pkg)
+                process_dependency(path, pkg, env_packages)
             system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env(),
                            cwd=os.path.join(pkg_root, dependency.name))
 
@@ -95,7 +96,7 @@ def process(package: str, sha: str) -> bool:
         logger.info(f"Building package {package}")
         pkgs = pkgbuild.parse(package)
         for pkg in pkgs:
-            process_dependency(package, pkg)
+            process_dependency(package, pkg, pkgs)
         system.execute(['makepkg', '-s', '-C', '--noconfirm'], env=makepkg_env(), cwd=package)
         m.update(package, sha)
         logger.info(f"Package {package} updated")
