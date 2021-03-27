@@ -179,16 +179,16 @@ Server = https://aurei.nulls.ec</code></pre>
                 <strong>Built:</strong>
                 <time
                   datetime="{{ package.builddate }}"
-                  title="{{ package.builddate }}"
-                  >{{ package.builddate }}</time
-                >
+                  title="{{ package.builddate }}">
+                  {{ package.builddate }}
+                </time>
               </li>
               <li class="list-group-item">
                 <strong>License:</strong>{{ package.license | join(", ") }}
               </li>
               <li class="list-group-item">
                 <strong>SHA256:</strong>
-                {{ package.sha256sum }}
+                <code>{{ package.sha256sum }}</code>
               </li>
             </ul>
           </div>
