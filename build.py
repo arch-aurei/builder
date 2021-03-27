@@ -1,19 +1,18 @@
 #!/usr/bin/env -S python -u
 
 import csv
-import dataclasses
 import json
 import os
-import sys
-import shutil
-from tempfile import NamedTemporaryFile
-from pathlib import Path
-from typing import Optional
 import pathlib
+import shutil
+import sys
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from typing import Optional
 
+from git import Repo
 from jinja2 import Environment, PackageLoader, select_autoescape
 from loguru import logger
-from git import Repo
 
 from builder.arch import resolver, pkgbuild
 from builder.arch.repository import Repository
@@ -81,7 +80,7 @@ def process_dependency(path: str, package: Package) -> None:
             pkg_root = os.path.join(path, '../')
             Repo.clone_from(f'https://aur.archlinux.org/{dependency.name}.git',
                             os.path.join(pkg_root, dependency.name))
-            pkgs = pkgbuild.parse(os.path.join(pkg_root, dependency.name, 'PKGBUILD'))
+            pkgs = pkgbuild.parse(os.path.join(pkg_root, dependency.name))
             for pkg in pkgs:
                 process_dependency(path, pkg)
             system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env(),
@@ -94,7 +93,7 @@ def process(package: str, sha: str) -> bool:
     manifest = m.check(package)
     if manifest is None or manifest != sha:
         logger.info(f"Building package {package}")
-        pkgs = pkgbuild.parse(os.path.join(package, 'PKGBUILD'))
+        pkgs = pkgbuild.parse(package)
         for pkg in pkgs:
             process_dependency(package, pkg)
         system.execute(['makepkg', '-s', '-C', '--noconfirm'], env=makepkg_env(), cwd=package)

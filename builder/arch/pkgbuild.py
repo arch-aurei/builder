@@ -2,6 +2,7 @@ import os
 import subprocess
 from typing import Union
 
+from loguru import logger
 from pydantic import BaseModel
 
 from builder.arch.package_common import verdeps_dict, optdeps_dict
@@ -28,8 +29,8 @@ class PkgBuildPackage(BaseModel):
 
 
 def parse(file: str) -> list[PkgBuildPackage]:
-    ret = subprocess.check_output(['makepkg', '--printsrcinfo', '-p', os.path.basename(file)],
-                                  cwd=os.path.dirname(file))
+    logger.debug(f"Reading PKGBUILD file for ${file}")
+    ret = subprocess.check_output(['makepkg', '--printsrcinfo'], cwd=os.path.dirname(file))
     pkgbase: dict[str, dict[str, Union[str, list[str]]]] = {}
     pkgname: dict[str, dict[str, Union[str, list[str]]]] = {}
 

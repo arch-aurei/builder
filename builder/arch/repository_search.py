@@ -2,6 +2,7 @@ from typing import Optional
 
 import pyalpm
 import requests
+from loguru import logger
 from pyalpm import Handle
 from pydantic import BaseModel
 
@@ -141,6 +142,7 @@ class AURPackage(BaseModel):
 def local_search(package: str) -> Optional[LocalPackage]:
     """ Search for a package in the systems default repos """
 
+    logger.debug(f"Looking up {package} locally")
     for repo in _repos:
         pkg: pyalpm.Package = repo.get_pkg(package)
         if pkg is None:
@@ -164,16 +166,19 @@ def local_search(package: str) -> Optional[LocalPackage]:
                                 url=pkg.url,
                                 version=pkg.version)
 
+    logger.debug(f"Package {package} was not found locally")
     return None
 
 
 def aur_search(package: str) -> Optional[AURPackage]:
     """ Search for a package on the AUR """
 
+    logger.debug(f"Looking up {package} on the AUR")
     params = {'v': '5', 'type': 'info', 'arg': [package]}
     r = requests.get('https://aur.archlinux.org/rpc/', params=params)
     res = r.json()
     if res['resultcount'] != 1:
+        logger.debug(f"Package {package} was not found on the AUR")
         return None
 
     p = res['results'][0]
