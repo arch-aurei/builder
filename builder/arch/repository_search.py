@@ -5,6 +5,7 @@ import requests
 from pyalpm import Handle
 from pydantic import BaseModel
 
+from builder.arch.package_common import verdeps_dict, optdeps_dict
 from builder.util.misc import listify
 
 _alpm_handle = Handle('/', '/var/lib/pacman')
@@ -41,7 +42,7 @@ class LocalPackage(BaseModel):
     db: Optional[str]
     """the database from which the package comes from, or None"""
 
-    depends: list[str]
+    depends: list[dict[str, str]]
     """list of dependencies"""
 
     desc: str
@@ -71,7 +72,7 @@ class LocalPackage(BaseModel):
     licenses: list[str]
     """list of licenses"""
 
-    makedepends: list[str]
+    makedepends: list[dict[str, str]]
     """list of make dependencies"""
 
     md5sum: str
@@ -80,7 +81,7 @@ class LocalPackage(BaseModel):
     name: str
     """package name"""
 
-    optdepends: list[str]
+    optdepends: list[dict[str, str]]
     """list of optional dependencies"""
 
     packager: str
@@ -125,9 +126,9 @@ class AURPackage(BaseModel):
     first_submitted: int
     last_modified: int
     URL_path: str
-    depends: list[str]
-    makedepends: list[str]
-    optdepends: list[str]
+    depends: list[dict[str, str]]
+    makedepends: list[dict[str, str]]
+    optdepends: list[dict[str, str]]
     checkdepends: list[str]
     conflicts: list[str]
     provides: list[str]
@@ -148,13 +149,17 @@ def local_search(package: str) -> Optional[LocalPackage]:
             if len(pkgs) > 0:
                 pkg = pkgs[0]
         if pkg is not None:
+            depends = verdeps_dict(pkg.depends)
+            makedepends = verdeps_dict(pkg.makedepends)
+            optdepends = optdeps_dict(pkg.optdepends)
+
             return LocalPackage(arch=pkg.arch, backup=pkg.backup, base=pkg.base, base64_sig=pkg.base64_sig,
                                 builddate=pkg.builddate, checkdepends=pkg.checkdepends, conflicts=pkg.conflicts,
-                                db=pkg.db.name, depends=pkg.depends, desc=pkg.desc, download_size=pkg.download_size,
+                                db=pkg.db.name, depends=depends, desc=pkg.desc, download_size=pkg.download_size,
                                 filename=pkg.filename, files=pkg.files, groups=pkg.groups,
                                 has_scriptlet=pkg.has_scriptlet, installdate=pkg.installdate,
-                                isize=pkg.isize, licenses=pkg.licenses, makedepends=pkg.makedepends, md5sum=pkg.md5sum,
-                                name=pkg.name, optdepends=pkg.optdepends, packager=pkg.packager, provides=pkg.provides,
+                                isize=pkg.isize, licenses=pkg.licenses, makedepends=makedepends, md5sum=pkg.md5sum,
+                                name=pkg.name, optdepends=optdepends, packager=pkg.packager, provides=pkg.provides,
                                 reason=pkg.reason, replaces=pkg.replaces, sha256sum=pkg.sha256sum, size=pkg.size,
                                 url=pkg.url,
                                 version=pkg.version)
@@ -172,11 +177,16 @@ def aur_search(package: str) -> Optional[AURPackage]:
         return None
 
     p = res['results'][0]
+
+    depends = verdeps_dict(listify(p, 'Depends'))
+    makedepends = verdeps_dict(listify(p, 'MakeDepends'))
+    optdepends = optdeps_dict(listify(p, 'OptDepends'))
+
     return AURPackage(id=p['ID'], name=p['Name'], package_base_id=p['PackageBaseID'], package_base=p['PackageBase'],
                       version=p['Version'], description=p['Description'], URL=p['URL'], num_votes=p['NumVotes'],
                       popularity=p['Popularity'], out_of_date=p['OutOfDate'], maintainer=p['Maintainer'],
                       first_submitted=p['FirstSubmitted'], last_modified=p['LastModified'], URL_path=p['URLPath'],
-                      depends=p['Depends'], makedepends=listify(p, 'MakeDepends'), optdepends=listify(p, 'OptDepends'),
+                      depends=depends, makedepends=makedepends, optdepends=optdepends,
                       checkdepends=listify(p, 'CheckDepends'), conflicts=listify(p, 'Conflicts'),
                       provides=listify(p, 'Provides'), replaces=listify(p, 'Replaces'), groups=listify(p, 'Groups'),
                       license=p['License'], keywords=p['Keywords'])

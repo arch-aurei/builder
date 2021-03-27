@@ -21,10 +21,6 @@ Package = Union[LocalPackage, AURPackage, RepoPackage, PkgBuildPackage]
 def resolve(packages: list[str]) -> list[Package]:
     dependencies: list[Package] = []
     for pkg in packages:
-        stripped_version = re.search(r"^([^<>=]+)", pkg)  # TODO: we should really check versions
-        if stripped_version is not None:
-            pkg = stripped_version.group(1)
-
         logger.info(f"Looking for dependency: {pkg}")
         local = repository_search.local_search(pkg)
         if local is not None:

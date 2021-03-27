@@ -3,6 +3,7 @@ from typing import Optional, Union
 import libarchive
 from pydantic import BaseModel
 
+from builder.arch.package_common import verdeps_dict, optdeps_dict
 from builder.util.misc import listify
 
 
@@ -25,9 +26,9 @@ class RepoPackage(BaseModel):
     packager: str
     conflicts: list[str]
     provides: list[str]
-    depends: list[str]
-    optdepends: list[str]
-    makedepends: list[str]
+    depends: list[dict[str, str]]
+    optdepends: list[dict[str, str]]
+    makedepends: list[dict[str, str]]
 
 
 class Repository:
@@ -67,10 +68,14 @@ class Repository:
                 else:
                     d[current] = line
 
+        pretty_depends = verdeps_dict(listify(d, 'depends'))
+        pretty_make_depends = verdeps_dict(listify(d, 'makedepends'))
+        pretty_opt_depends = optdeps_dict(listify(d, 'optdepends'))
+
         return RepoPackage(filename=d['filename'], name=d['name'], base=d['base'], version=d['version'], desc=d['desc'],
                            csize=int(d['csize']), isize=int(d['isize']), md5sum=d['md5sum'], sha256sum=d['sha256sum'],
                            pgpsig=d['pgpsig'], url=d['url'], license=listify(d, 'license'), arch=d['arch'],
                            builddate=int(d['builddate']), packager=d['packager'],
                            conflicts=listify(d, 'conflicts'), provides=listify(d, 'provides'),
-                           depends=listify(d, 'depends'), optdepends=listify(d, 'optdepends'),
-                           makedepends=listify(d, 'makedepends'))
+                           depends=pretty_depends, optdepends=pretty_opt_depends,
+                           makedepends=pretty_make_depends)

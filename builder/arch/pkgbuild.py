@@ -4,6 +4,7 @@ from typing import Union
 
 from pydantic import BaseModel
 
+from builder.arch.package_common import verdeps_dict, optdeps_dict
 from builder.util.misc import listify
 
 
@@ -16,11 +17,11 @@ class PkgBuildPackage(BaseModel):
     url: str
     arch: list[str]
     license: list[str]
-    makedepends: list[str]
-    depends: list[str]
+    makedepends: list[dict[str, str]]
+    depends: list[dict[str, str]]
     provides: list[str]
     options: list[str]
-    optdepends: list[str]
+    optdepends: list[dict[str, str]]
     source: list[str]
     sha256sums: list[str]
     sha512sums: list[str]
@@ -69,12 +70,15 @@ def parse(file: str) -> list[PkgBuildPackage]:
     packages = []
     for name, package in pkgname.items():
         p = package | next(iter(pkgbase.values()))  # for now, assume theres one base
+
+        depends = verdeps_dict(listify(p, 'depends'))
+        makedepends = verdeps_dict(listify(p, 'makedepends'))
+        optdepends = optdeps_dict(listify(p, 'optdepends'))
         packages.append(
             PkgBuildPackage(pkgbase=p['pkgbase'], pkgname=p['pkgname'], pkgdesc=p['pkgdesc'], pkgver=p['pkgver'],
                             pkgrel=p['pkgrel'], url=p['url'], arch=['arch'], license=listify(p, 'license'),
-                            makedepends=listify(p, 'makedepends'), depends=listify(p, 'depends'),
-                            provides=listify(p, 'provides'), options=listify(p, 'options'),
-                            optdepends=listify(p, 'optdepends'), source=listify(p, 'source'),
+                            makedepends=makedepends, depends=depends, provides=listify(p, 'provides'),
+                            options=listify(p, 'options'), optdepends=optdepends, source=listify(p, 'source'),
                             sha256sums=listify(p, 'sha256sums'), sha512sums=listify(p, 'sha512sums')))
 
     return packages

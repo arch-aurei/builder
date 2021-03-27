@@ -72,7 +72,7 @@ def makepkg_env() -> dict[str, str]:
 
 def process_dependency(path: str, package: Package) -> None:
     logger.debug("Checking package dependencies")
-    dependencies = resolver.resolve(package.depends)
+    dependencies = resolver.resolve(list(map(lambda x: x["name"], package.depends)))
     for dependency in dependencies:
         if isinstance(dependency, LocalPackage):
             continue
@@ -149,7 +149,7 @@ def upload_index(repo: S3Repo) -> None:
     repo.upload_file('index.html')
 
     with open(os.path.join('artifacts', 'repoPackages.json'), 'w') as writer:
-        vs = list(map(lambda v: dataclasses.asdict(v), r.entries.values()))
+        vs = list(map(lambda v: v.dict(), r.entries.values()))
         writer.write(json.dumps(vs))
     repo.upload_file('repoPackages.json')
 
