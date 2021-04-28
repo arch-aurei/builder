@@ -103,7 +103,7 @@ class LocalPackage(BaseModel):
     size: int
     """package size"""
 
-    url: str
+    url: Optional[str]
     """package URL"""
 
     version: str
@@ -188,7 +188,7 @@ def aur_search(package: str) -> Optional[AURPackage]:
     optdepends = optdeps_dict(listify(p, 'OptDepends'))
 
     return AURPackage(id=p['ID'], name=p['Name'], package_base_id=p['PackageBaseID'], package_base=p['PackageBase'],
-                      version=p['Version'], description=p['Description'], URL=p['URL'], num_votes=p['NumVotes'],
+                      version=p['Version'], description=p['Description'], URL=p.get('URL'), num_votes=p['NumVotes'],
                       popularity=p['Popularity'], out_of_date=p['OutOfDate'], maintainer=p['Maintainer'],
                       first_submitted=p['FirstSubmitted'], last_modified=p['LastModified'], URL_path=p['URLPath'],
                       depends=depends, makedepends=makedepends, optdepends=optdepends,

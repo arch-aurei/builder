@@ -19,7 +19,7 @@ class RepoPackage(BaseModel):
     md5sum: str
     sha256sum: str
     pgpsig: str
-    url: str
+    url: Optional[str]
     license: list[str]
     arch: str
     builddate: int
@@ -74,7 +74,7 @@ class Repository:
 
         return RepoPackage(filename=d['filename'], name=d['name'], base=d['base'], version=d['version'], desc=d['desc'],
                            csize=int(d['csize']), isize=int(d['isize']), md5sum=d['md5sum'], sha256sum=d['sha256sum'],
-                           pgpsig=d['pgpsig'], url=d['url'], license=listify(d, 'license'), arch=d['arch'],
+                           pgpsig=d['pgpsig'], url=d.get('url'), license=listify(d, 'license'), arch=d['arch'],
                            builddate=int(d['builddate']), packager=d['packager'],
                            conflicts=listify(d, 'conflicts'), provides=listify(d, 'provides'),
                            depends=pretty_depends, optdepends=pretty_opt_depends,
