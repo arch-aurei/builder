@@ -1,6 +1,7 @@
 import os
 import subprocess
 from typing import Union
+from typing import Optional
 
 from loguru import logger
 from pydantic import BaseModel
@@ -15,7 +16,7 @@ class PkgBuildPackage(BaseModel):
     pkgdesc: str
     pkgver: str
     pkgrel: str
-    url: str
+    url: Optional[str]
     arch: list[str]
     license: list[str]
     makedepends: list[dict[str, str]]
@@ -78,7 +79,7 @@ def parse(package_dir: str) -> list[PkgBuildPackage]:
         optdepends = optdeps_dict(listify(p, 'optdepends'))
         packages.append(
             PkgBuildPackage(pkgbase=p['pkgbase'], pkgname=p['pkgname'], pkgdesc=p['pkgdesc'], pkgver=p['pkgver'],
-                            pkgrel=p['pkgrel'], url=p['url'], arch=['arch'], license=listify(p, 'license'),
+                            pkgrel=p['pkgrel'], url=p.get('url'), arch=['arch'], license=listify(p, 'license'),
                             makedepends=makedepends, depends=depends, provides=listify(p, 'provides'),
                             options=listify(p, 'options'), optdepends=optdepends, source=listify(p, 'source'),
                             sha256sums=listify(p, 'sha256sums'), sha512sums=listify(p, 'sha512sums')))
