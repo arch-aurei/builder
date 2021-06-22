@@ -20,7 +20,7 @@ def update_keys() -> None:
             for key in keys.read().split("\n"):
                 if key.strip() != "":
                     keypart = key.split('#')[0].strip()
-                    execute(['gpg', '--recv-key', keypart])
+                    execute(['gpg', '--keyserver', 'keyserver.ubuntu.com', '--recv-key', keypart])
 
 
 def import_key(name: str, keyid: str) -> None:
