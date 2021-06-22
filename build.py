@@ -11,7 +11,6 @@ from tempfile import NamedTemporaryFile
 from typing import Optional
 
 from git import Repo
-from jinja2 import Environment, PackageLoader, select_autoescape
 from loguru import logger
 
 from builder.arch import resolver, pkgbuild
@@ -139,15 +138,6 @@ def package_main() -> None:
 
 def upload_index(repo: S3Repo) -> None:
     r = Repository(os.path.join("artifacts", f"{REPO_NAME}.db.tar.zst"))
-
-    env = Environment(
-        loader=PackageLoader('__main__', 'templates'),
-        autoescape=select_autoescape(['html'])
-    )
-    template = env.get_template('index.html')
-    with open(os.path.join('artifacts', 'index.html'), 'w') as writer:
-        writer.write(template.render(packages=r.entries))
-    repo.upload_file('index.html')
 
     with open(os.path.join('artifacts', 'repoPackages.json'), 'w') as writer:
         vs = list(map(lambda v: v.dict(), r.entries.values()))
