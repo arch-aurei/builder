@@ -2,6 +2,7 @@ loguru
 boto3
 boto3-stubs[s3]
 python-libarchive
+pyalpm
 requests
 Jinja2
 GitPython
