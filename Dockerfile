@@ -11,7 +11,7 @@ COPY builder /builder
 COPY templates /templates
 COPY build.py /entrypoint.py
 
-RUN pacman -Syu --noconfirm python python-pip pacman-contrib git wget && \
+RUN pacman -Syu --noconfirm python python-pip pacman-contrib git wget pyalpm && \
     pacman --noconfirm -Sc
 
 RUN pacman-key --init && pacman-key --populate
