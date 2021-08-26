@@ -78,13 +78,15 @@ def process_dependency(path: str, package: Package, env_packages: list[PkgBuildP
         elif isinstance(dependency, AURPackage):
             logger.debug(f"Installing aur package: {dependency.name}")
             pkg_root = os.path.join(path, '../')
-            Repo.clone_from(f'https://aur.archlinux.org/{dependency.name}.git',
-                            os.path.join(pkg_root, dependency.name))
-            pkgs = pkgbuild.parse(os.path.join(pkg_root, dependency.name))
+            target_repo = os.path.join(pkg_root, dependency.name)
+            if not os.path.exists(path=target_repo):
+                # Already done as part of this run, no need to reclone?
+                Repo.clone_from(f'https://aur.archlinux.org/{dependency.name}.git', target_repo)
+            pkgs = pkgbuild.parse(target_repo)
             for pkg in pkgs:
                 process_dependency(path, pkg, env_packages)
             system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env(),
-                           cwd=os.path.join(pkg_root, dependency.name))
+                           cwd=target_repo)
 
 
 def process(package: str, sha: str) -> bool:
