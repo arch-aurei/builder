@@ -86,6 +86,8 @@ def process_dependency(path: str, package: Package, env_packages: list[PkgBuildP
             Repo.clone_from(f'https://aur.archlinux.org/{dependency.package_base}.git', target_repo)
             pkgs = pkgbuild.parse(target_repo)
             for pkg in pkgs:
+                if pkg.name == dependency.name or pkg.name == dependency.package_base:
+                    continue
                 process_dependency(path, pkg, env_packages)
             system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env(),
                            cwd=target_repo)
