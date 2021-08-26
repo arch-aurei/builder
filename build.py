@@ -86,9 +86,7 @@ def process_dependency(path: str, package: Package, env_packages: list[PkgBuildP
             pkgs = pkgbuild.parse(target_repo)
             for pkg in pkgs:
                 logger.debug(f"Handling dependency of {dependency.name} ({dependency.package_base}): {pkg.pkgname}")
-                if pkg.pkgname == dependency.name or pkg.pkgname == dependency.package_base:
-                    continue
-                process_dependency(path, pkg, env_packages)
+                process_dependency(path, pkg, env_packages + pkg)
             system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env(),
                            cwd=target_repo)
 
