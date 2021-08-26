@@ -31,6 +31,7 @@ class PkgBuildPackage(BaseModel):
 
 def parse(package_dir: str) -> list[PkgBuildPackage]:
     logger.debug(f"Reading PKGBUILD file for {package_dir}")
+    logger.debug(f"Contents of directory {os.listdir(package_dir)}")
     ret = subprocess.check_output(['makepkg', '--printsrcinfo'], cwd=package_dir)
     pkgbase: dict[str, dict[str, Union[str, list[str]]]] = {}
     pkgname: dict[str, dict[str, Union[str, list[str]]]] = {}
