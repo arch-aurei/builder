@@ -78,14 +78,18 @@ def process_dependency(path: str, package: Package, env_packages: list[PkgBuildP
         elif isinstance(dependency, AURPackage):
             logger.debug(f"Installing aur package: {dependency.name} (from {dependency.package_base}")
             pkg_root = os.path.join(path, '../')
-            target_repo = os.path.join(pkg_root, dependency.name)
+            target_repo = os.path.join(pkg_root, dependency.package_base)
             if not os.path.exists(path=target_repo):
                 # Already done as part of this run?
                 Repo.clone_from(f'https://aur.archlinux.org/{dependency.package_base}.git', target_repo)
 
             pkgs = pkgbuild.parse(target_repo)
+            
             for pkg in pkgs:
                 logger.debug(f"Handling dependency of {dependency.name} ({dependency.package_base}): {pkg.pkgname}")
+                if pkg.pkgname == dependency.name or pkg.pkgname == dependency.package_base or pkg.pkgname in map(lambda x: x.pkgname, env_packages):
+                    logger.debug(f"SKIPPING {pkg.pkgname}")
+                    continue
                 process_dependency(path, pkg, env_packages + [pkg])
             system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env(),
                            cwd=target_repo)
