@@ -81,7 +81,7 @@ def process_dependency(path: str, package: Package, env_packages: list[PkgBuildP
             target_repo = os.path.join(pkg_root, dependency.name)
             if os.path.exists(path=target_repo):
                 # Already done as part of this run? try re-clone
-                os.rmdir(target_repo)
+                shutil.rmtree(target_repo)
 
             Repo.clone_from(f'https://aur.archlinux.org/{dependency.name}.git', target_repo)
             pkgs = pkgbuild.parse(target_repo)
