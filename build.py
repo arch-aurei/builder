@@ -76,14 +76,14 @@ def process_dependency(path: str, package: Package, env_packages: list[PkgBuildP
         if isinstance(dependency, LocalPackage):
             continue
         elif isinstance(dependency, AURPackage):
-            logger.debug(f"Installing aur package: {dependency.name}")
+            logger.debug(f"Installing aur package: {dependency.name} (from {dependency.package_base}")
             pkg_root = os.path.join(path, '../')
             target_repo = os.path.join(pkg_root, dependency.name)
             if os.path.exists(path=target_repo):
                 # Already done as part of this run? try re-clone
                 shutil.rmtree(target_repo)
 
-            Repo.clone_from(f'https://aur.archlinux.org/{dependency.name}.git', target_repo)
+            Repo.clone_from(f'https://aur.archlinux.org/{dependency.package_base}.git', target_repo)
             pkgs = pkgbuild.parse(target_repo)
             for pkg in pkgs:
                 process_dependency(path, pkg, env_packages)
