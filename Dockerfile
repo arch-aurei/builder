@@ -1,7 +1,8 @@
 FROM archlinux:base-devel
 
-RUN groupadd -g 1001 -r builder && useradd -m --no-log-init -r -u 1001 -g builder -G wheel builder
-RUN sed --in-place 's/^#\s*\(%wheel\s\+ALL=(ALL)\s\+NOPASSWD:\s\+ALL\)/\1/' /etc/sudoers
+RUN groupadd -g 1001 -r builder && \
+    useradd -m --no-log-init -r -u 1001 -g builder -G wheel builder && \
+    sed --in-place 's/^#\s*\(%wheel\s\+ALL=(ALL:ALL)\s\+NOPASSWD:\s\+ALL\)/\1/' /etc/sudoers
 
 COPY makepkg.conf /etc/makepkg.conf
 COPY pacman.conf /etc/pacman.conf
