@@ -8,19 +8,26 @@ from typing import Optional, Mapping
 from loguru import logger
 
 
+def update_arch_keyring() -> None:
+    logger.info("Updating archlinux-keyring")
+    execute(['sudo', 'pacman', '-Sy', 'archlinux-keyring', '--noconfirm'])
+
+
 def update_packages() -> None:
     logger.info("Updating system packages")
     execute(['sudo', 'pacman', '-Syu', '--noconfirm'])
 
 
 def update_keys() -> None:
+    update_arch_keyring()
     if os.path.isfile('keys.txt'):
         logger.info("Updating system keyring")
         with open('keys.txt', 'r') as keys:
             for key in keys.read().split("\n"):
                 if key.strip() != "":
                     keypart = key.split('#')[0].strip()
-                    execute(['gpg', '--keyserver', 'keyserver.ubuntu.com', '--recv-key', keypart])
+                    execute(['gpg', '--keyserver',
+                             'keyserver.ubuntu.com', '--recv-key', keypart])
 
 
 def import_key(name: str, keyid: str) -> None:
@@ -50,12 +57,13 @@ def _tee(infile, *files):
     return t
 
 
-def execute(command: list[str], cwd: Optional[str] = None, env: Mapping[str, str] = None) -> str:
+def execute(command: list[str], cwd: Optional[str] = None, env: Optional[Mapping[str, str]] = None) -> str:
     logger.debug(f"executing command: {command}")
     p = Popen(command, stdout=PIPE, stderr=PIPE, cwd=cwd, env=env, text=True)
     stout = StringIO()
     sterr = StringIO()
-    threads = [_tee(p.stdout, stout, logger.debug), _tee(p.stderr, sterr, logger.error)]
+    threads = [_tee(p.stdout, stout, logger.debug),
+               _tee(p.stderr, sterr, logger.error)]
     for t in threads:
         t.join()
     ret = p.wait()

@@ -10,7 +10,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Optional
 
-from git import Repo
+from git.repo import Repo
 from loguru import logger
 
 from builder.arch import resolver, pkgbuild
@@ -71,22 +71,26 @@ def makepkg_env() -> dict[str, str]:
 
 def process_dependency(path: str, package: Package, env_packages: list[PkgBuildPackage]) -> None:
     logger.debug("Checking package dependencies")
-    dependencies = resolver.resolve(list(map(lambda x: x["name"], package.depends)), env_packages)
+    dependencies = resolver.resolve(
+        list(map(lambda x: x["name"], package.depends)), env_packages)
     for dependency in dependencies:
         if isinstance(dependency, LocalPackage):
             continue
         elif isinstance(dependency, AURPackage):
-            logger.debug(f"Installing aur package: {dependency.name} (from {dependency.package_base}")
+            logger.debug(
+                f"Installing aur package: {dependency.name} (from {dependency.package_base}")
             pkg_root = os.path.join(path, '../')
             target_repo = os.path.join(pkg_root, dependency.package_base)
             if not os.path.exists(path=target_repo):
                 # Already done as part of this run?
-                Repo.clone_from(f'https://aur.archlinux.org/{dependency.package_base}.git', target_repo)
+                Repo.clone_from(
+                    f'https://aur.archlinux.org/{dependency.package_base}.git', target_repo)
 
             pkgs = pkgbuild.parse(target_repo)
-            
+
             for pkg in pkgs:
-                logger.debug(f"Handling dependency of {dependency.name} ({dependency.package_base}): {pkg.pkgname}")
+                logger.debug(
+                    f"Handling dependency of {dependency.name} ({dependency.package_base}): {pkg.pkgname}")
                 if pkg.pkgname == dependency.name or pkg.pkgname == dependency.package_base or pkg.pkgname in map(lambda x: x.pkgname, env_packages):
                     logger.debug(f"SKIPPING {pkg.pkgname}")
                     continue
@@ -104,7 +108,8 @@ def process(package: str, sha: str) -> bool:
         pkgs = pkgbuild.parse(package)
         for pkg in pkgs:
             process_dependency(package, pkg, pkgs)
-        system.execute(['makepkg', '-s', '-C', '--noconfirm'], env=makepkg_env(), cwd=package)
+        system.execute(['makepkg', '-s', '-C', '--noconfirm'],
+                       env=makepkg_env(), cwd=package)
         m.update(package, sha)
         logger.info(f"Package {package} updated")
         return True
@@ -115,14 +120,14 @@ def process(package: str, sha: str) -> bool:
 
 def build_main() -> None:
     logger.info("Building packages")
-    system.update_packages()
     system.update_keys()
     system.import_key(KEY_NAME, KEY_ID)
+    system.update_packages()
 
     repo = Repo(os.getcwd())
     builds = 0
     for submodule in repo.iter_submodules():
-        if process(submodule.path, submodule.hexsha):
+        if process(submodule.path, submodule.hexsha):  # type: ignore
             builds += 1
         if builds >= MAX_PER_BUILD:
             logger.info("Hit max builds per single run, please run again")
