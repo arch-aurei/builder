@@ -11,7 +11,8 @@ from builder.util.misc import listify
 
 _alpm_handle = Handle('/', '/var/lib/pacman')
 _repos = [_alpm_handle.register_syncdb('core', pyalpm.SIG_DATABASE_OPTIONAL),
-          _alpm_handle.register_syncdb('community', pyalpm.SIG_DATABASE_OPTIONAL),
+          _alpm_handle.register_syncdb(
+              'community', pyalpm.SIG_DATABASE_OPTIONAL),
           _alpm_handle.register_syncdb('extra', pyalpm.SIG_DATABASE_OPTIONAL),
           _alpm_handle.register_syncdb('multilib', pyalpm.SIG_DATABASE_OPTIONAL)]
 

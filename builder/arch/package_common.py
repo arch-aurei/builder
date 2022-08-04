@@ -17,7 +17,8 @@ def optdeps_dict(xs: list[str]) -> list[dict[str, str]]:
     for item in xs:
         kv = item.split(':', maxsplit=1)
         if len(kv) == 2:
-            pretty_xs.append({'name': kv[0].strip(), 'description': kv[1].strip()})
+            pretty_xs.append(
+                {'name': kv[0].strip(), 'description': kv[1].strip()})
         else:
             pretty_xs.append({'name': item})
     return pretty_xs

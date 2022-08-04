@@ -40,7 +40,8 @@ class Repository:
         with libarchive.Archive(self.name, 'r') as archive:
             for entry in archive:
                 if entry.size != 0:
-                    package = self.parse_entry(str(archive.read(entry.size), 'utf-8'))
+                    package = self.parse_entry(
+                        str(archive.read(entry.size), 'utf-8'))
                     self.entries[package.name] = package
 
     def search(self, package: str) -> Optional[RepoPackage]:

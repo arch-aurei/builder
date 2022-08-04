@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from typing import Protocol, Union
+from typing import Optional, Protocol, Union
 
 from loguru import logger
 
@@ -18,7 +18,7 @@ Package = Union[LocalPackage, AURPackage, RepoPackage, PkgBuildPackage]
 # - on the aur
 # - in our local repo
 # - part of a pkgbuild itself
-def resolve(packages: list[str], env_packages: list[PkgBuildPackage] = None) -> list[Package]:
+def resolve(packages: list[str], env_packages: Optional[list[PkgBuildPackage]] = None) -> list[Package]:
     dependencies: list[Package] = []
     for pkg in packages:
         logger.info(f"Looking for dependency: {pkg}")

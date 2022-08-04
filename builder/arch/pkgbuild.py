@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import Union
+from typing import Union, cast
 from typing import Optional
 
 from loguru import logger
@@ -32,7 +32,8 @@ class PkgBuildPackage(BaseModel):
 def parse(package_dir: str) -> list[PkgBuildPackage]:
     logger.debug(f"Reading PKGBUILD file for {package_dir}")
     logger.debug(f"Contents of directory {os.listdir(package_dir)}")
-    ret = subprocess.check_output(['makepkg', '--printsrcinfo'], cwd=package_dir)
+    ret = subprocess.check_output(
+        ['makepkg', '--printsrcinfo'], cwd=package_dir)
     pkgbase: dict[str, dict[str, Union[str, list[str]]]] = {}
     pkgname: dict[str, dict[str, Union[str, list[str]]]] = {}
 
@@ -73,7 +74,8 @@ def parse(package_dir: str) -> list[PkgBuildPackage]:
 
     packages = []
     for name, package in pkgname.items():
-        p = package | next(iter(pkgbase.values()))  # for now, assume theres one base
+        # for now, assume theres one base
+        p = package | next(iter(pkgbase.values()))
 
         depends = verdeps_dict(listify(p, 'depends'))
         makedepends = verdeps_dict(listify(p, 'makedepends'))
@@ -81,7 +83,8 @@ def parse(package_dir: str) -> list[PkgBuildPackage]:
         packages.append(
             PkgBuildPackage(pkgbase=p['pkgbase'], pkgname=p['pkgname'], pkgdesc=p['pkgdesc'], pkgver=p['pkgver'],
                             pkgrel=p['pkgrel'], url=p.get('url'), arch=['arch'], license=listify(p, 'license'),
-                            makedepends=makedepends, depends=depends, provides=listify(p, 'provides'),
+                            makedepends=makedepends, depends=depends, provides=listify(
+                                p, 'provides'),
                             options=listify(p, 'options'), optdepends=optdepends, source=listify(p, 'source'),
                             sha256sums=listify(p, 'sha256sums'), sha512sums=listify(p, 'sha512sums')))
 

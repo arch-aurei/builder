@@ -21,7 +21,8 @@ class S3Repo:
     def download(self) -> None:
         logger.info("Downloading repository files")
         for file in self.repo_files:
-            self.s3.download_file(self.bucket_name, file, os.path.join(self.build_dir, file))
+            self.s3.download_file(self.bucket_name, file,
+                                  os.path.join(self.build_dir, file))
 
     def upload(self) -> None:
         logger.info("Uploading repository files")
@@ -36,7 +37,8 @@ class S3Repo:
         content_type = mimetypes.guess_type(file)[0]
         if content_type is not None:
             args['ContentType'] = content_type
-        self.s3.upload_file(os.path.join(self.build_dir, file), self.bucket_name, file, ExtraArgs=args)
+        self.s3.upload_file(os.path.join(self.build_dir, file),
+                            self.bucket_name, file, ExtraArgs=args)
 
     def add_package(self, package: str) -> None:
         logger.info(f"Adding {package} to repository")
