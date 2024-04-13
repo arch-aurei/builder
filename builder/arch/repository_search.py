@@ -77,7 +77,7 @@ class LocalPackage(BaseModel):
     makedepends: list[dict[str, str]]
     """list of make dependencies"""
 
-    md5sum: str
+    md5sum: str | None
     """package md5sum"""
 
     name: str
