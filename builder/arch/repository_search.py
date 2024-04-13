@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 import pyalpm
 import requests
@@ -77,7 +77,7 @@ class LocalPackage(BaseModel):
     makedepends: list[dict[str, str]]
     """list of make dependencies"""
 
-    md5sum: str | None
+    md5sum: Union[str, None] = None
     """package md5sum"""
 
     name: str
