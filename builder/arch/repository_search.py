@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional
 
 import pyalpm
 import requests
@@ -77,7 +77,7 @@ class LocalPackage(BaseModel):
     makedepends: list[dict[str, str]]
     """list of make dependencies"""
 
-    md5sum: Union[str, None] = None
+    md5sum: str = ''
     """package md5sum"""
 
     name: str
@@ -161,7 +161,7 @@ def local_search(package: str) -> Optional[LocalPackage]:
                                 db=pkg.db.name, depends=depends, desc=pkg.desc, download_size=pkg.download_size,
                                 filename=pkg.filename, files=pkg.files, groups=pkg.groups,
                                 has_scriptlet=pkg.has_scriptlet, installdate=pkg.installdate,
-                                isize=pkg.isize, licenses=pkg.licenses, makedepends=makedepends, md5sum=pkg.md5sum,
+                                isize=pkg.isize, licenses=pkg.licenses, makedepends=makedepends, md5sum=pkg.md5sum or '',
                                 name=pkg.name, optdepends=optdepends, packager=pkg.packager, provides=pkg.provides,
                                 reason=pkg.reason, replaces=pkg.replaces, sha256sum=pkg.sha256sum, size=pkg.size,
                                 url=pkg.url,
