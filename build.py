@@ -95,7 +95,7 @@ def process_dependency(path: str, package: Package, env_packages: list[PkgBuildP
                     logger.debug(f"SKIPPING {pkg.pkgname}")
                     continue
                 process_dependency(path, pkg, env_packages + [pkg])
-            system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm'], env=makepkg_env(),
+            system.execute(['makepkg', '-s', '-i', '-C', '--noconfirm', '--needed'], env=makepkg_env(),
                            cwd=target_repo)
 
 
@@ -108,7 +108,7 @@ def process(package: str, sha: str) -> bool:
         pkgs = pkgbuild.parse(package)
         for pkg in pkgs:
             process_dependency(package, pkg, pkgs)
-        system.execute(['makepkg', '-s', '-C', '--noconfirm'],
+        system.execute(['makepkg', '-s', '-C', '--noconfirm', '--needed'],
                        env=makepkg_env(), cwd=package)
         m.update(package, sha)
         logger.info(f"Package {package} updated")

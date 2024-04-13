@@ -7,8 +7,8 @@ RUN groupadd -g 1001 -r builder && \
 COPY makepkg.conf /etc/makepkg.conf
 COPY pacman.conf /etc/pacman.conf
 
-RUN pacman -Syu --noconfirm python python-pip pacman-contrib git wget && \
-    pacman --noconfirm -Sc
+RUN pacman -Syu --noconfirm --needed python python-pip pacman-contrib git wget && \
+    pacman --noconfirm -Sc 
 
 RUN pacman-key --init && pacman-key --populate
 

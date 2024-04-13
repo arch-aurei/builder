@@ -10,12 +10,12 @@ from loguru import logger
 
 def update_arch_keyring() -> None:
     logger.info("Updating archlinux-keyring")
-    execute(['sudo', 'pacman', '-Sy', 'archlinux-keyring', '--noconfirm'])
+    execute(['sudo', 'pacman', '-Sy', 'archlinux-keyring', '--noconfirm', '--needed'])
 
 
 def update_packages() -> None:
     logger.info("Updating system packages")
-    execute(['sudo', 'pacman', '-Syu', '--noconfirm'])
+    execute(['sudo', 'pacman', '-Syu', '--noconfirm', '--needed'])
 
 
 def update_keys() -> None:
