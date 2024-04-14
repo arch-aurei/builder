@@ -4,8 +4,9 @@ inputs:
   action:
     description: 'build or package'
     required: true
+    default: 'build'
 runs:
   using: 'docker'
-  image: 'docker://ashleyis/aurei-builder:latest'
+  image: 'Dockerfile'
   args:
     - "--${{ inputs.action }}"

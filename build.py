@@ -24,10 +24,10 @@ from builder.util.s3repo import S3Repo
 MANIFEST_NAME = "manifest.csv"
 REPO_NAME = "aurei"
 BUCKET_NAME = "aurei.nulls.ec"
-KEY_NAME = "aurei.pgp"
-KEY_ID = "565ABC3363CDD9F1E333E5744AAFA429C6F28921"
-MAX_PER_BUILD = 5
-
+KEY_NAME = os.environ.get("KEY_NAME", "aurei.pgp")
+KEY_ID = os.environ.get("KEY_ID", "565ABC3363CDD9F1E333E5744AAFA429C6F28921")
+PACKAGER = os.environ.get("PACKAGER", "Aurei Builder <aurei@nulls.ec>")
+MAX_PER_BUILD = int(os.environ.get("MAX_PER_BUILD", 5))
 
 class Manifest:
     """ Manifest file of latest package updates """
@@ -66,6 +66,8 @@ def makepkg_env() -> dict[str, str]:
     env = os.environ.copy()
     env["PKGDEST"] = "../../artifacts"
     env["PATH"] = "/usr/local/bin:/usr/local/sbin:/usr/bin"
+    env["GPGKEY"] = KEY_ID
+    env["PACKAGER"] = PACKAGER
     return env
 
 
@@ -124,7 +126,7 @@ def build_main() -> None:
     system.import_key(KEY_NAME, KEY_ID)
     system.update_packages()
 
-    repo = Repo(os.getcwd())
+    repo = Repo(Path.cwd())
     builds = 0
     for submodule in repo.iter_submodules():
         if process(submodule.path, submodule.hexsha):  # type: ignore
@@ -141,12 +143,14 @@ def package_main() -> None:
     logger.info(f"Found {len(packages)} packages to add to repo")
     if len(packages) > 0:
         system.import_key(KEY_NAME, KEY_ID)
-        repo = S3Repo(REPO_NAME, BUCKET_NAME)
-        repo.download()
-        for package in packages:
-            repo.add_package(package)
-        repo.upload()
-        upload_index(repo)
+        # Skip this when doing local offline CI testing with act
+        if os.environ.get('ACT') is None:
+            repo = S3Repo(REPO_NAME, BUCKET_NAME)
+            repo.download()
+            for package in packages:
+                repo.add_package(package)
+            repo.upload()
+            upload_index(repo)
 
 
 def upload_index(repo: S3Repo) -> None:

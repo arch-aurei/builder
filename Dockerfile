@@ -10,12 +10,10 @@ COPY pacman.conf /etc/pacman.conf
 RUN pacman -Syu --noconfirm --needed python python-pip pacman-contrib git wget && \
     pacman --noconfirm -Sc 
 
-RUN pacman-key --init && pacman-key --populate
+RUN pacman-key --init && pacman-key --populate && \
+    git config --system --add safe.directory "*"
 
-COPY requirements.txt /requirements.txt
-COPY builder /builder
-COPY templates /templates
-COPY build.py /entrypoint.py
+COPY --chown=builder:builder requirements.txt /aurei/requirements.txt
 
 ENV VIRTUAL_ENV=/opt/venv
 RUN python -m venv $VIRTUAL_ENV
@@ -24,7 +22,13 @@ RUN chown -R builder:builder $VIRTUAL_ENV
 
 USER builder
 
-RUN pip install pkgconfig
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR /aurei
 
-ENTRYPOINT ["python", "/entrypoint.py"]
+RUN pip install pkgconfig --no-cache-dir && \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY --chown=builder:builder builder /aurei/builder
+COPY --chown=builder:builder templates /aurei/templates
+COPY --chown=builder:builder build.py /aurei/entrypoint.py
+
+ENTRYPOINT ["python", "/aurei/entrypoint.py"]

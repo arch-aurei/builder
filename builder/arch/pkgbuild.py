@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import Union, cast
+from typing import Union
 from typing import Optional
 
 from loguru import logger
