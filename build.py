@@ -5,6 +5,7 @@ import json
 import os
 import pathlib
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -142,6 +143,15 @@ def package_main() -> None:
                                pathlib.Path('artifacts').glob('*.pkg.tar*'))))
     logger.info(f"Found {len(packages)} packages to add to repo")
     if len(packages) > 0:
+        # HACKY GPG LOCK FIX
+        clear_stale_lock_cmd = [
+            'ls', '-l', '~/.gnupg/*.lock', '&&',
+            'rm', '-rf', '~/.gnupg/*.lock', '&&'
+            'gpgconf', '--kill', 'gpg-agent'
+        ]
+        ret = subprocess.check_output(clear_stale_lock_cmd, shell=True)
+        logger.debug("Hopefully fixed gpg lock issue", str(ret, 'utf-8'))
+        # END HACKY GPG LOCK FIX
         system.import_key(KEY_NAME, KEY_ID)
         # Skip this when doing local offline CI testing with act
         if os.environ.get('ACT') is None:
