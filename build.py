@@ -144,8 +144,10 @@ def package_main() -> None:
     if len(packages) > 0:
         # HACKY GPG LOCK FIX
         clear_stale_lock_cmds = [
-            ['ls', '-l'],
-            ['gpgconf', '--kill', 'gpg-agent'],
+            # ls the dir
+            ['ls', '-al', '~/.gnupg/**/*'],
+            # find and remove stale lock files
+            ['find', '~/.gnupg/', '-name', '"*.lock"', '-exec', 'rm', '{}', ';'],
         ]
         for cmd in clear_stale_lock_cmds:
             ret = system.execute(cmd)
