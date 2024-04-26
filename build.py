@@ -144,15 +144,14 @@ def package_main() -> None:
     if len(packages) > 0:
         # HACKY GPG LOCK FIX
         clear_stale_lock_cmds = [
-            ['ls', '-l', '~/.gnupg/*.lock'],
-            ['rm', '-rf', '~/.gnupg/*.lock'],
+            ['ls', '-l'],
             ['gpgconf', '--kill', 'gpg-agent'],
         ]
         for cmd in clear_stale_lock_cmds:
             ret = system.execute(cmd)
             logger.debug(f"{cmd}: {ret}")
         # END HACKY GPG LOCK FIX
-        
+
         system.import_key(KEY_NAME, KEY_ID)
         # Skip this when doing local offline CI testing with act
         if os.environ.get('ACT') is None:
