@@ -16,8 +16,9 @@ class RepoPackage(BaseModel):
     desc: str
     csize: int
     isize: int
-    md5sum: str
-    sha256sum: str
+    md5sum: Optional[str]
+    sha256sum: Optional[str]
+    b2sum: Optional[str]
     pgpsig: str
     url: Optional[str]
     license: list[str]
@@ -74,8 +75,8 @@ class Repository:
         pretty_opt_depends = optdeps_dict(listify(d, 'optdepends'))
 
         return RepoPackage(filename=d['filename'], name=d['name'], base=d['base'], version=d['version'], desc=d['desc'],
-                           csize=int(d['csize']), isize=int(d['isize']), md5sum=d['md5sum'], sha256sum=d['sha256sum'],
-                           pgpsig=d['pgpsig'], url=d.get('url'), license=listify(d, 'license'), arch=d['arch'],
+                           csize=int(d['csize']), isize=int(d['isize']), md5sum=d.get('md5sum', ''), sha256sum=d.get('sha256sum', ''),
+                           b2sum=d.get('b2sum', ''), pgpsig=d['pgpsig'], url=d.get('url'), license=listify(d, 'license'), arch=d['arch'],
                            builddate=int(d['builddate']), packager=d['packager'],
                            conflicts=listify(d, 'conflicts'), provides=listify(d, 'provides'),
                            depends=pretty_depends, optdepends=pretty_opt_depends,
