@@ -2,7 +2,9 @@ loguru
 boto3
 boto3-stubs[s3]
 python-libarchive
-pyalpm
+# Until https://pypi.org/project/pyalpm/ is >0.10.6
+# See: https://gitlab.archlinux.org/archlinux/pyalpm/-/merge_requests/24
+pyalpm @ git+https://gitlab.archlinux.org/archlinux/pyalpm.git#1564f173af70d9fc103885613f5a6e7d8947983e
 requests
 GitPython
 pydantic
